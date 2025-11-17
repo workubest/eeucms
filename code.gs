@@ -1518,8 +1518,10 @@ function doOptions(e) {
   const response = ContentService.createTextOutput()
     .setMimeType(ContentService.MimeType.JSON);
 
-  // CORS headers are handled by the proxy server, not GAS directly
-  // GAS setHeader() method is not available in all environments
+  // Handle CORS preflight requests
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, x-client-version');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   return response;
 }
@@ -2936,8 +2938,10 @@ function createResponse(data, statusCode = 200) {
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 
-  // CORS headers are handled by the proxy server, not GAS directly
-  // GAS setHeader() method is not available in all environments
+  // Add CORS headers for direct frontend access
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, x-client-version');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 
   return response;
 }

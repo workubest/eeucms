@@ -1,6 +1,6 @@
-// Optimized GAS Client with advanced caching, sync, and performance features
+// Optimized GAS Client with Netlify Function proxy (solves CORS issues)
+const API_BASE_URL = '/.netlify/functions/api'; // Use Netlify function proxy
 const GAS_URL = import.meta.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwWoZtW-PbJv0wCB6VQquETpPpbenpFjRlhioqJ1jR0_5ES689-S_X126R9IVNoBDe0/exec';
-const API_BASE_URL = GAS_URL; // Use GAS URL directly
 
 // Cache configuration
 const CACHE_CONFIG = {

@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const login = async (email: string, password: string) => {
-    // Authenticate against Google Sheets data via GAS
+    // Authenticate against Google Sheets data via Netlify Function proxy (solves CORS)
     try {
-      console.log('🔐 Authenticating with Google Sheets...');
+      console.log('🔐 Authenticating with Google Sheets via Netlify proxy...');
       const response = await gasApi.login(email.trim(), password.trim());
 
       if (response.success && response.data?.user) {
@@ -54,18 +54,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(user);
         localStorage.setItem('eeu_user', JSON.stringify(user));
-        console.log('✅ Authentication successful:', user.name);
+        console.log('✅ Google Sheets authentication successful:', user.name);
         return { success: true };
       } else {
         throw new Error(response.error || 'Invalid credentials');
       }
     } catch (gasError) {
-      console.error('❌ GAS authentication failed:', gasError);
-      return { success: false, error: gasError.message || 'Authentication failed. Please check your credentials.' };
-    }
+      console.error('❌ Google Sheets authentication failed:', gasError);
 
-    // If GAS authentication fails, return the error
-    return { success: false, error: 'Authentication failed. Please check your credentials.' };
+      // Provide helpful error messages
+      let errorMessage = 'Authentication failed. Please check your credentials.';
+
+      if (gasError.message?.includes('Failed to fetch') || gasError.message?.includes('Network')) {
+        errorMessage = 'Cannot connect to server. Please check your internet connection.';
+      } else if (gasError.message?.includes('Invalid email or password')) {
+        errorMessage = 'Invalid email or password. Please check your credentials.';
+      } else if (gasError.message?.includes('Account is inactive')) {
+        errorMessage = 'Your account is inactive. Please contact system administrator.';
+      }
+
+      return { success: false, error: errorMessage };
+    }
   };
 
   const logout = () => {
