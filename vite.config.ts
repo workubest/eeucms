@@ -9,21 +9,26 @@ export default defineConfig(() => ({
     host: "::",
     port: 8080,
     proxy: {
-      // Proxy Netlify function calls to a local GAS proxy for development
+      // Proxy Netlify function calls to GAS for development
       '/.netlify/functions/api': {
         target: 'https://script.google.com/macros/s/AKfycbwWoZtW-PbJv0wCB6VQquETpPpbenpFjRlhioqJ1jR0_5ES689-S_X126R9IVNoBDe0/exec',
         changeOrigin: true,
         secure: true,
         rewrite: (path) => {
-          // Remove the Netlify function path prefix
-          return path.replace('/.netlify/functions/api', '');
+          // Extract the API path after the function prefix
+          const apiPath = path.replace('/.netlify/functions/api', '');
+          console.log('🔄 Development proxy rewrite:', path, '→', apiPath);
+          return apiPath;
         },
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
             console.log('🔧 Development proxy error:', err.message);
+            console.log('🔧 Request details:', req.method, req.url);
           });
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            console.log('🔄 Development proxy:', req.method, req.url, '→ GAS');
+            console.log('🔄 Development proxy request:', req.method, req.url);
+            // Ensure proper headers for GAS
+            proxyReq.setHeader('Content-Type', 'application/json');
           });
           proxy.on('proxyRes', (proxyRes, req, res) => {
             // Add CORS headers for development
@@ -33,12 +38,6 @@ export default defineConfig(() => ({
             console.log('✅ Development proxy response:', proxyRes.statusCode);
           });
         },
-      },
-      // Fallback for direct API calls (if any)
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false,
       },
     },
   },
