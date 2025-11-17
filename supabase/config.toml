@@ -1,0 +1,7 @@
+project_id = "acxouvfdjuivgsbsfxwj"
+
+[functions.manage-user]
+verify_jwt = true
+
+[functions.export-users]
+verify_jwt = true
