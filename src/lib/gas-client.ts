@@ -1,5 +1,6 @@
 // Optimized GAS Client with advanced caching, sync, and performance features
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const GAS_URL = import.meta.env.GAS_URL || 'https://script.google.com/macros/s/AKfycbwWoZtW-PbJv0wCB6VQquETpPpbenpFjRlhioqJ1jR0_5ES689-S_X126R9IVNoBDe0/exec';
+const API_BASE_URL = GAS_URL; // Use GAS URL directly
 
 // Cache configuration
 const CACHE_CONFIG = {
@@ -215,20 +216,23 @@ const makeRequest = async (
     try {
       console.log(`🚀 GAS API: ${method} ${endpoint} (attempt ${attempt + 1})`);
 
-      const url = `${API_BASE_URL}${endpoint}`;
+      const url = API_BASE_URL;
+      const gasData = {
+        path: endpoint,
+        action: method === 'GET' ? 'get' : method === 'POST' ? 'create' : method === 'PUT' ? 'update' : 'delete',
+        data: data
+      };
+
       const config: RequestInit = {
-        method,
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
         },
         // Add timeout for better performance
         signal: AbortSignal.timeout(30000) // 30 second timeout
       };
 
-      if (method === 'POST' || method === 'PUT') {
-        config.body = compressData(data);
-      }
+      config.body = compressData(gasData);
 
       const response = await fetch(url, config);
 
