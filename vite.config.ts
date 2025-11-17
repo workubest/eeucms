@@ -9,6 +9,32 @@ export default defineConfig(() => ({
     host: "::",
     port: 8080,
     proxy: {
+      // Proxy Netlify function calls to a local GAS proxy for development
+      '/.netlify/functions/api': {
+        target: 'https://script.google.com/macros/s/AKfycbwWoZtW-PbJv0wCB6VQquETpPpbenpFjRlhioqJ1jR0_5ES689-S_X126R9IVNoBDe0/exec',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => {
+          // Remove the Netlify function path prefix
+          return path.replace('/.netlify/functions/api', '');
+        },
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('🔧 Development proxy error:', err.message);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('🔄 Development proxy:', req.method, req.url, '→ GAS');
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORS headers for development
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-api-key, x-client-version';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            console.log('✅ Development proxy response:', proxyRes.statusCode);
+          });
+        },
+      },
+      // Fallback for direct API calls (if any)
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
